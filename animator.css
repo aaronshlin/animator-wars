@@ -1,0 +1,836 @@
+/* All styling for the Animator app. The .gleam files only attach class names. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+
+/* ── Layout: two columns ─────────────────────────────────────────────────── */
+
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: #1a1a2e;
+  color: #d4c5a0;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+/* Left column: library and code. A fixed measure keeps the stage large and the
+   editor a comfortable width to read. */
+.code-col {
+  width: min(420px, 46vw);
+  min-width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  border-right: 1px solid #3a3a5e;
+  background: #0f0f1e;
+}
+
+/* The code column stays in the DOM when collapsed, so CodeMirror keeps its
+   state; hiding it gives the right column the full width. */
+.app.code-hidden .code-col { display: none; }
+
+/* A small emoji button (the code pane's collapse toggle, and the playback
+   controls once they exist). */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #2a2a4a;
+  color: #d4c5a0;
+  border: 1px solid #4a4a8a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 5px 8px;
+}
+.icon-btn:hover { background: #3a3a5e; }
+
+/* ── Code panel (left column) ───────────────────────────────────────────── */
+
+.code-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #1a1a3e;
+  border-bottom: 1px solid #3a3a5e;
+}
+.brand { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.code-title {
+  color: #e8d8b0;
+  font-family: 'Georgia', serif;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+.brand-sub {
+  color: #8a8478;
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Drawing picker, directly under the title so the library is one glance away. */
+.library {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 4px;
+}
+.library-label {
+  color: #8a8478;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.drawing-select {
+  width: 100%;
+  appearance: none;
+  background-color: #16162c;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23d4c5a0' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color: #e8d8b0;
+  border: 1px solid #3a3a5e;
+  border-radius: 8px;
+  padding: 8px 32px 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+.drawing-select:hover { border-color: #6a6aaa; }
+.drawing-select:focus {
+  outline: none;
+  border-color: #c4a574;
+}
+
+/* Wrapper holding the editor. */
+.code-editor-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+/* CodeMirror mount node: grows to fill the panel. */
+.code-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: #0d0d1a;
+}
+.code-editor .cm-editor { width: 100%; height: 100%; }
+
+/* Collapsible reference of the built-ins available to draw functions. */
+.reference {
+  margin: 8px 14px 12px;
+  border: 1px solid #3a3a5e;
+  border-radius: 8px;
+  background: #0d0d1a;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.reference-summary {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #b8a888;
+  font-family: monospace;
+  font-size: 12px;
+  user-select: none;
+}
+.reference-summary:hover { color: #e8d8b0; }
+.reference-body {
+  padding: 4px 12px 10px;
+  border-top: 1px solid #3a3a5e;
+  max-height: 30vh;
+  overflow: auto;
+}
+.reference-group { margin-top: 8px; }
+.reference-group-title {
+  color: #8a8aca;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.reference-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 1px 0;
+}
+.reference-sig {
+  color: #89ddff;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre;
+}
+.reference-desc { color: #6a7a8a; font-size: 11px; }
+
+/* ── Stage (right column): the canvas, with playback docked beneath it ──── */
+
+.stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a14;
+}
+
+.canvas-area {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at center, #16162c 0%, #0a0a14 68%);
+  container-type: size;
+}
+
+/* The interpreter's List(Path) (or its error), shown as text before the
+   animation pane is built. */
+.output {
+  align-self: stretch;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cfe3ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* Leave room for the reveal button, which only overlays this pane while the
+   code column is hidden. */
+.app.code-hidden .output { padding-top: 48px; }
+
+/* Button that reveals the code column again when it is hidden. */
+.reveal-code {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+}
+
+/* A centred square that fits the (possibly non-square) animation area. Give your
+   <canvas> this class, so that drawings aren't stretched. */
+.canvas {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+
+/* ── Playback dock ──────────────────────────────────────────────────────── */
+
+.dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 18px 16px;
+  border-top: 1px solid #2e2e4a;
+  background: #10101c;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.now-playing { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.now-kicker {
+  color: #8a8478;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.now-name {
+  color: #e8d8b0;
+  font-family: Georgia, serif;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.transport-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+.transport-btn {
+  padding: 6px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.transport-btn.is-on {
+  background: #3a3428;
+  border-color: #c4a574;
+  color: #f0e2c4;
+}
+
+/* Playback position: a full-width scrubber with elapsed and total time. */
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.timeline-time {
+  flex-shrink: 0;
+  min-width: 44px;
+  color: #b8a888;
+  font-family: monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-time:last-child { text-align: right; }
+.range-time {
+  margin: 0;
+  background: linear-gradient(90deg, #c4a574 0 var(--progress, 0%), #2c2c44 var(--progress, 0%) 100%);
+}
+.range-time:disabled { opacity: 0.4; cursor: default; }
+.range-time::-moz-range-track {
+  background: linear-gradient(90deg, #c4a574 0 var(--progress, 0%), #2c2c44 var(--progress, 0%) 100%);
+}
+
+.sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.slider { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.slider-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.slider-name {
+  color: #b8a888;
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.slider-readout {
+  color: #f0e2c4;
+  font-family: monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  background: #1a1a2e;
+  border: 1px solid #3a3a5e;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.slider-ends {
+  display: flex;
+  justify-content: space-between;
+  color: #6a655c;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.slider-note {
+  color: #6a655c;
+  font-size: 11px;
+}
+
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 8px 0 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2c2c44, #c4a574);
+  outline: none;
+  cursor: pointer;
+}
+.range-speed {
+  background: linear-gradient(90deg, #6a7a9a, #3a3a5e 50%, #c4a574);
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f0e2c4;
+  border: 2px solid #1a1a2e;
+  box-shadow: 0 0 0 1px #c4a574;
+  cursor: pointer;
+}
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f0e2c4;
+  border: 2px solid #1a1a2e;
+  box-shadow: 0 0 0 1px #c4a574;
+  cursor: pointer;
+}
+.range::-moz-range-track {
+  height: 4px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2c2c44, #c4a574);
+}
+
+@media (max-width: 760px) {
+  .sliders { grid-template-columns: 1fr; }
+}
+
+
+/* ── Graph War (graphwar.mjs) ─────────────────────────────────────────────── */
+
+.brand-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+/* The way into Animator Wars: a gold, gently shimmering pill. */
+.game-btn {
+  position: relative;
+  overflow: hidden;
+  gap: 6px;
+  padding: 5px 12px 5px 10px;
+  border: 1px solid #e8c88a;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #5a4628 0%, #3a2e1c 45%, #6a5230 100%);
+  color: #fff4d8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px rgba(232, 200, 138, 0.15), 0 0 14px rgba(232, 200, 138, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  animation: game-btn-glow 2.8s ease-in-out infinite;
+}
+.game-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 244, 216, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: game-btn-shine 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.game-btn:hover {
+  background: linear-gradient(135deg, #6a5430 0%, #4a3a22 45%, #7a6038 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(232, 200, 138, 0.35), 0 0 22px rgba(232, 200, 138, 0.5);
+}
+.game-btn:active { transform: translateY(0) scale(0.97); }
+.game-btn:focus-visible { outline: 2px solid #f0e2c4; outline-offset: 2px; }
+.game-btn-icon { font-size: 13px; line-height: 1; }
+@keyframes game-btn-glow {
+  50% { box-shadow: 0 0 0 1px rgba(232, 200, 138, 0.3), 0 0 20px rgba(232, 200, 138, 0.45); }
+}
+@keyframes game-btn-shine {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* "Welcome to ANIMATOR WARS!", fading in and out over the page. */
+.gw-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: radial-gradient(circle at center, rgba(26, 26, 46, 0.92) 0%, rgba(10, 10, 20, 0.97) 70%);
+  cursor: pointer;
+  animation: gw-intro-fade 2.9s ease-in-out forwards;
+}
+.gw-intro-inner { text-align: center; animation: gw-intro-rise 2.9s ease-out forwards; }
+.gw-intro-welcome {
+  color: #b8a888;
+  font-family: Georgia, serif;
+  font-size: clamp(16px, 2.4vw, 26px);
+  font-style: italic;
+  letter-spacing: 0.08em;
+}
+.gw-intro-title {
+  margin-top: 6px;
+  font-family: Georgia, serif;
+  font-size: clamp(36px, 8vw, 92px);
+  letter-spacing: 0.12em;
+  line-height: 1.05;
+  background: linear-gradient(90deg, #c4a574, #fff4d8 45%, #e8c88a 55%, #c4a574);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 24px rgba(232, 200, 138, 0.35));
+  animation: gw-intro-shimmer 2.9s linear forwards;
+}
+.gw-intro-rule {
+  width: min(420px, 70vw);
+  height: 1px;
+  margin: 18px auto 12px;
+  background: linear-gradient(90deg, transparent, #c4a574, transparent);
+  transform: scaleX(0);
+  animation: gw-intro-rule 1.2s 0.4s ease-out forwards;
+}
+.gw-intro-sub {
+  color: #89ddff;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: clamp(12px, 1.4vw, 15px);
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+}
+/* "You WIN!": the same card, warmer and with a green rule. */
+.gw-intro.is-win {
+  background: radial-gradient(circle at center, rgba(40, 34, 20, 0.9) 0%, rgba(10, 10, 20, 0.96) 70%);
+}
+.gw-intro.is-win .gw-intro-title {
+  font-size: clamp(48px, 11vw, 128px);
+  filter: drop-shadow(0 0 32px rgba(232, 200, 138, 0.55));
+}
+.gw-intro.is-win .gw-intro-rule { background: linear-gradient(90deg, transparent, #8fbf7a, transparent); }
+.gw-intro.is-win .gw-intro-sub { color: #8fbf7a; font-family: Georgia, serif; font-size: clamp(14px, 1.8vw, 20px); }
+/* "You LOSE!": the same card, in the bots' red. */
+.gw-intro.is-lose {
+  background: radial-gradient(circle at center, rgba(46, 18, 18, 0.9) 0%, rgba(10, 10, 20, 0.97) 70%);
+}
+.gw-intro.is-lose .gw-intro-welcome { color: #c08a80; }
+.gw-intro.is-lose .gw-intro-title {
+  font-size: clamp(48px, 11vw, 128px);
+  background: linear-gradient(90deg, #a0483c, #ffb3a7 45%, #e07a6a 55%, #a0483c);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 32px rgba(224, 122, 106, 0.5));
+}
+.gw-intro.is-lose .gw-intro-rule { background: linear-gradient(90deg, transparent, #e07a6a, transparent); }
+.gw-intro.is-lose .gw-intro-sub { color: #e07a6a; font-family: Georgia, serif; font-size: clamp(14px, 1.8vw, 20px); }
+@keyframes gw-intro-fade {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+@keyframes gw-intro-rise {
+  0% { transform: translateY(14px) scale(0.96); }
+  25% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-6px) scale(1.02); }
+}
+@keyframes gw-intro-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+@keyframes gw-intro-rule { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .game-btn, .game-btn::after, .gw-intro-inner, .gw-intro-title, .gw-intro-rule { animation: none; }
+  .gw-intro-rule { transform: none; }
+}
+
+/* In the game the sidebar's code panel steps aside (it stays mounted, so the
+   editor keeps its state) and the game's own panel takes its place. */
+.app.game-mode .code-panel { display: none; }
+.graphwar-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+/* The battlefield is 50 × 30 units, so the canvas is 5:3 instead of square. */
+.app.game-mode .canvas {
+  width: min(100cqw, calc(100cqh * 5 / 3));
+  height: min(100cqh, calc(100cqw * 3 / 5));
+  cursor: crosshair;
+}
+
+.gw-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+/* Every section keeps its natural height and the panel scrolls instead, so
+   opening "How to play" never squeezes the code box. */
+.gw-body > * { flex-shrink: 0; }
+.gw-meta { display: grid; grid-template-columns: auto auto 1fr; gap: 12px; align-items: end; }
+.gw-meta-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.gw-round, .gw-wins {
+  color: #f0e2c4;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  line-height: 1;
+}
+.gw-diff { padding: 6px 28px 6px 10px; font-size: 13px; }
+
+.gw-status {
+  padding: 8px 10px;
+  border: 1px solid #3a3a5e;
+  border-radius: 8px;
+  background: #16162c;
+  color: #d4c5a0;
+  font-size: 13px;
+}
+.gw-status b { color: #f0e2c4; }
+.gw-status.phase-input { border-color: #c4a574; }
+.gw-status.phase-thinking { border-color: #e07a6a; }
+.gw-status.phase-won { border-color: #8fbf7a; }
+.gw-status.phase-lost { border-color: #e07a6a; }
+
+.gw-input {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  background: #0d0d1a;
+  border: 1px solid #3a3a5e;
+  border-radius: 8px;
+  outline: none;
+  color: #89ddff;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+}
+.gw-input:focus { border-color: #c4a574; }
+.gw-input.invalid { border-color: #e07a6a; }
+.gw-input.shake { animation: gw-shake 0.3s; }
+@keyframes gw-shake {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.gw-validate { font-size: 12px; min-height: 18px; color: #8a8478; white-space: pre-wrap; font-family: ui-monospace, Menlo, monospace; }
+.gw-validate.is-ok { color: #8fbf7a; }
+.gw-validate.is-error { color: #e07a6a; }
+.gw-helper {
+  border-color: #c4a574;
+  color: #f0e2c4;
+  background: #3a3428;
+}
+.gw-helper:hover { background: #4a4230; }
+.gw-hint {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border: 1px dashed #4a4a8a;
+  border-radius: 8px;
+  background: #13132a;
+  color: #b8a888;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.gw-hint[hidden] { display: none; }
+.gw-hint b { color: #f0e2c4; }
+.gw-hint.is-urgent {
+  border-style: solid;
+  border-color: #c4a574;
+  animation: gw-glow 1.6s ease-in-out 3;
+}
+@keyframes gw-glow {
+  50% { box-shadow: 0 0 0 3px rgba(196, 165, 116, 0.25); }
+}
+.gw-hint-icon { line-height: 1.4; }
+.gw-hint-btn {
+  display: inline;
+  background: #3a3428;
+  color: #f0e2c4;
+  border: 1px solid #c4a574;
+  border-radius: 999px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.gw-hint-btn:hover { background: #4a4230; }
+.gw-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gw-keys-label { margin-right: 2px; }
+.gw-kbd { font-size: 11px; opacity: 0.7; margin-left: 6px; }
+.gw-key { font-size: 12px; padding: 4px 10px; border-radius: 999px; }
+.gw-fire { justify-content: center; padding: 9px 14px; font-size: 14px; }
+.gw-fire:disabled { opacity: 0.45; cursor: default; }
+.gw-round-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gw-round-actions .gw-small { font-size: 12px; padding: 4px 10px; }
+
+.gw-units-wrap { display: flex; flex-direction: column; gap: 6px; }
+.gw-units { display: flex; flex-direction: column; gap: 3px; }
+.gw-unit { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.gw-unit-name { flex: 1; color: #d4c5a0; }
+.gw-unit-pos { color: #89ddff; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+.gw-unit.dead { opacity: 0.4; text-decoration: line-through; }
+
+.gw-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.gw-dot.player { background: #e8d8b0; }
+.gw-dot.bot { background: #e07a6a; }
+.gw-dot.dummy { background: #8a8aca; }
+
+.gw-help { margin: 0; }
+.gw-help-body p { margin: 6px 0; color: #b8a888; font-size: 12px; line-height: 1.45; }
+.gw-help-body b { color: #f0e2c4; }
+.gw-syntax { font-family: ui-monospace, Menlo, monospace; color: #6a7a8a !important; }
+.gw-dim { color: #6a655c; font-size: 12px; }
+
+/* The dock: health, the last attack, and the equation history. */
+.graphwar-dock {
+  flex-shrink: 0;
+  border-top: 1px solid #2e2e4a;
+  background: #10101c;
+}
+.gw-dock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 18px;
+  padding: 12px 18px 14px;
+  height: 200px;
+}
+.gw-col { display: flex; flex-direction: column; gap: 8px; min-height: 0; min-width: 0; }
+
+.gw-hp-list { display: flex; flex-direction: column; gap: 7px; overflow: auto; }
+.gw-hp-head { display: flex; justify-content: space-between; font-size: 12px; color: #d4c5a0; }
+.gw-hp-num { font-family: monospace; color: #b8a888; font-variant-numeric: tabular-nums; }
+.gw-hp-track { height: 6px; border-radius: 999px; background: #2c2c44; overflow: hidden; margin-top: 3px; }
+.gw-hp-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.gw-hp-fill.good { background: #8fbf7a; }
+.gw-hp-fill.warn { background: #c4a574; }
+.gw-hp-fill.bad { background: #e07a6a; }
+.gw-hp.dead { opacity: 0.4; }
+
+.gw-last { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #d4c5a0; overflow: auto; }
+.gw-last-who { color: #b8a888; font-size: 12px; }
+.gw-big { color: #f0e2c4; font-family: Georgia, serif; font-size: 24px; line-height: 1.15; }
+.gw-big.good { color: #8fbf7a; }
+.gw-arrow { color: #c4a574; }
+.gw-unit-label { font-size: 13px; color: #8a8478; font-family: system-ui, sans-serif; }
+
+.gw-history {
+  list-style: none;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+.gw-hist-divider {
+  color: #6a655c;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-top: 4px;
+}
+.gw-hist-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 10px;
+  padding: 5px 8px;
+  border: 1px solid #2e2e4a;
+  border-radius: 6px;
+  background: #16162c;
+  cursor: pointer;
+}
+.gw-hist-item:hover { border-color: #c4a574; }
+.gw-hist-who { font-size: 11px; color: #b8a888; white-space: nowrap; }
+.gw-hist-eq {
+  color: #89ddff;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gw-hist-res { grid-column: 2; font-size: 11px; color: #8a8478; }
+.gw-hist-res.good { color: #8fbf7a; }
+
+@media (max-width: 900px) {
+  .gw-dock { grid-template-columns: 1fr 1fr; height: auto; max-height: 45vh; overflow: auto; }
+  .gw-dock .gw-col:last-child { grid-column: 1 / -1; max-height: 160px; }
+}
+
+/* Victory and defeat card, over the battlefield. */
+.graphwar-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 10, 20, 0.55);
+  backdrop-filter: blur(2px);
+}
+.graphwar-overlay.is-open { display: flex; animation: gw-fade 0.35s ease-out; }
+@keyframes gw-fade { from { opacity: 0; } }
+.gw-card {
+  width: min(460px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px 26px 20px;
+  border: 1px solid #c4a574;
+  border-radius: 14px;
+  background: #13132a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  animation: gw-pop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.gw-card.is-lost { border-color: #e07a6a; }
+@keyframes gw-pop { from { transform: scale(0.9); opacity: 0; } }
+.gw-card-kicker {
+  color: #8a8478;
+  font-family: monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.gw-card-title {
+  margin: 6px 0 4px;
+  color: #f0e2c4;
+  font-family: Georgia, serif;
+  font-size: 40px;
+  font-weight: normal;
+  letter-spacing: 0.02em;
+}
+.gw-card.is-won .gw-card-title { color: #e8d8b0; text-shadow: 0 0 24px rgba(196, 165, 116, 0.5); }
+.gw-card.is-lost .gw-card-title { color: #e07a6a; }
+.gw-card-sub { color: #b8a888; font-size: 13px; line-height: 1.5; }
+.gw-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 18px 0;
+}
+.gw-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid #2e2e4a;
+  border-radius: 8px;
+  background: #0d0d1a;
+}
+.gw-stat-value { color: #f0e2c4; font-family: Georgia, serif; font-size: 20px; font-variant-numeric: tabular-nums; }
+.gw-stat-label { color: #6a655c; font-family: monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.gw-card-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.gw-card-actions .transport-btn { padding: 9px 18px; font-size: 14px; }
+.gw-card-note { margin-top: 12px; color: #6a655c; font-size: 12px; }
+.gw-card-note b { color: #b8a888; }
